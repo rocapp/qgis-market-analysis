@@ -10,6 +10,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 ###################################
+
 QgsApplication.setPrefixPath("C:\\OSGeo4W\\apps\\qgis", True)
 qgs = QgsApplication([], True)
 qgs.initQgis()
@@ -48,18 +49,10 @@ vl3_ = QgsMapCanvasLayer(vl3)
 vl3_.setVisible(True)
 canvas.refresh()
 
-# img = QImage(QSize(800, 600), QImage.Format_ARGB32_Premultiplied)
-# color = QColor(255, 255, 255)
-# img.fill(color.rgb())
-
 mapRenderer = QgsMapRenderer()
 mapRenderer.setProjectionsEnabled(True)
 
 canvas.refresh()
-
-# create painter
-# p = QPainter(img)
-# p.setRenderHint(QPainter.Antialiasing)
 
 ###################################
 
@@ -92,7 +85,6 @@ def distance():
 
   upperBound = []
   r = 40000.0
-  # r = 40.0
   i = 0
   while i < len(cost):
     if cost[i] > r and tree[i] != -1:
@@ -124,39 +116,26 @@ centroid_layer.updateExtents()
 centroid_layer_ = QgsMapCanvasLayer(centroid_layer)
 QgsMapLayerRegistry.instance().addMapLayer(centroid_layer)
 
-# for pt in all_pts:
-#   p.drawPoint(pt[0], pt[1])
-
-canvas.setExtent(centroid_layer.extent())
+rect = vl2.extent()
+rect.grow(5e-2)
+canvas.setExtent(rect)
 canvas.setLayerSet([centroid_layer_, vl2_])
 canvas.refresh()
 
-# # set layer set
-# layers = dict([(k, v) for (k, v) in QgsMapLayerRegistry.instance().mapLayers().items() if "nodes_to_edges20160111174805104" != k])
-# lst = layers.keys()
-# mapRenderer.setLayerSet(lst)
-
-# # set extent
-# rect = QgsRectangle(mapRenderer.fullExtent())
-# rect.scale(1.1)
-# mapRenderer.setExtent(rect)
-
-# # set output size
-# mapRenderer.setOutputSize(img.size(), img.logicalDpiX())
-
-# # do the rendering
-# mapRenderer.render(p)
-# p.end()
-
 settings = canvas.mapSettings()
 settings.setLayers([l.id() for l in [centroid_layer, vl2]])
+
+ndpi = 300.00
+dpmm = ndpi / 25.4
+nwidth = int(dpmm * settings.outputSize().width())
+nheight = int(dpmm * settings.outputSize().height())
+print nwidth, nheight
+settings.setOutputDpi(ndpi)
+settings.setOutputSize(QSize(nwidth, nheight))
 job = QgsMapRendererParallelJob(settings)
 job.start()
 job.waitForFinished()
 image = job.renderedImage()
 image.save("C:\\Users\\Robbie\\Desktop\\render.tif")
-
-# save image
-# img.save("C:\\Users\\Robbie\\Desktop\\render.png","png")
 
 qgs.exitQgis()
