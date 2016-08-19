@@ -199,20 +199,23 @@ class RoadNetwork:
         if result:
             self.iface.mapCanvas().mapTool() # Reset map tool
             start_point = self.dlg.tool.point
-            r = self.dlg.dist_lim_text
+            r = float(self.dlg.dist_lim_text)
             sel_ix = self.dlg.comboBox.currentIndex()
-            vl = self.dlg.layers[sel_ix]
+            vl = self.iface.legendInterface().layers()[sel_ix]
             vl3 = QgsVectorLayer("Point", "marked_points", "memory")
             QgsMapLayerRegistry.instance().addMapLayer(vl3)
-            pr = vl3.dataProvider()
-            vl3.startEditing()
-            all_pts = self.distance(vl, start_point, pr, r)
-            vl3.updateExtents()
-            centroids_outname = self.get_files()[0]
-            QgsGeometryAnalyzer().centroids(vl3, centroids_outname, False) # save centroids
-            centroid_layer = QgsVectorLayer(centroids_outname, "centroid_layer", "ogr")
-            centroid_layer.updateExtents()
-            QgsMapLayerRegistry.instance().addMapLayer(centroid_layer)
+            all_pts = self.distance(vl, start_point, vl3, r)
+            # vl3.commitChanges()
+            # QgsMapLayerRegistry.instance().addMapLayer(vl3)
+            self.iface.mapCanvas().refresh()
+            # centroids_outname = self.get_files()[0]
+            # QgsGeometryAnalyzer().centroids(vl3, centroids_outname, False) # save centroids
+            # vl3.commitChanges()
+            # centroid_layer = QgsVectorLayer(os.path.normpath(centroids_outname), "centroid_layer", "ogr")
+            # centroid_layer.updateExtents()
+            # QgsMapLayerRegistry.instance().addMapLayer(centroid_layer)
+            self.dlg.coord_label.setText(str("(0.0000, 0.0000)"))
+            self.dlg.comboBox.clear()
 
     def output_img(self, extent_layer):
         rect = extent_layer.extent()
@@ -242,17 +245,21 @@ class RoadNetwork:
         dlg = QFileDialog()
         dlg.setFileMode(QFileDialog.AnyFile)
         dlg.setFilter(types[type_])
-        filenames = QStringList()
+        filenames = list()
         if dlg.exec_():
-            filenames = dlg.selectedFiles()
+            filenames = list(map(lambda ff: ".".join([ff, type_]), dlg.selectedFiles()))
         return filenames
             
-    def distance(self, vl, pStart, pr, r):
+    def distance(self, vl, pStart, vl3, r):
+        pStart = QgsPoint(pStart)
         canvas = self.iface.mapCanvas()
         mapRenderer = QgsMapRenderer()
         director = QgsLineVectorLayerDirector(vl, -1, '', '', '', 3)
         properter = QgsDistanceArcProperter()
         director.addProperter(properter)
+
+        pr = vl3.dataProvider()
+        vl3.startEditing()
 
         crs = mapRenderer.destinationCrs()
         builder = QgsGraphBuilder(crs)
@@ -282,7 +289,7 @@ class RoadNetwork:
                 if cost[outVertexId] < r:
                     upperBound.append(i)
             i = i + 1
-
+        print len(upperBound)
         for i in upperBound:
             centerPoint = graph.vertex(i).point()
             all_pts.append((centerPoint.x(), centerPoint.y()))
@@ -292,6 +299,7 @@ class RoadNetwork:
             feature.setGeometry(newPt)
             feats.append(feature)
         pr.addFeatures(feats)
+        vl3.updateExtents()
         return all_pts
 
 
