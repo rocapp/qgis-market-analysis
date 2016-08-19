@@ -201,21 +201,32 @@ class RoadNetwork:
             start_point = self.dlg.tool.point
             r = float(self.dlg.dist_lim_text)
             sel_ix = self.dlg.comboBox.currentIndex()
-            vl = self.iface.legendInterface().layers()[sel_ix]
+            vl11 = self.iface.legendInterface().layers()[sel_ix]
+            vl = QgsVectorLayer("LineString", "polylines_layer", "memory")
+            QgsMapLayerRegistry.instance().addMapLayer(vl)
+            self.setup_polylines(vl, vl11)
             vl3 = QgsVectorLayer("Point", "marked_points", "memory")
             QgsMapLayerRegistry.instance().addMapLayer(vl3)
             all_pts = self.distance(vl, start_point, vl3, r)
-            # vl3.commitChanges()
-            # QgsMapLayerRegistry.instance().addMapLayer(vl3)
             self.iface.mapCanvas().refresh()
-            # centroids_outname = self.get_files()[0]
-            # QgsGeometryAnalyzer().centroids(vl3, centroids_outname, False) # save centroids
-            # vl3.commitChanges()
-            # centroid_layer = QgsVectorLayer(os.path.normpath(centroids_outname), "centroid_layer", "ogr")
-            # centroid_layer.updateExtents()
-            # QgsMapLayerRegistry.instance().addMapLayer(centroid_layer)
             self.dlg.coord_label.setText(str("(0.0000, 0.0000)"))
             self.dlg.comboBox.clear()
+
+    def setup_polylines(self, vl, vl11):
+        iterr = vl11.getFeatures()
+        prp = vl.dataProvider()
+        vl.startEditing()
+        feats = list()
+        for feature in iterr:
+            geom = feature.geometry()
+            if geom.type() == QGis.Line:
+                ln = geom.asPolyline()
+                lngeom = QgsGeometry.fromPolyline(ln)
+                feature = QgsFeature()
+                feature.setGeometry(lngeom)
+                feats.append(feature)
+        prp.addFeatures(feats)
+        vl.updateExtents()
 
     def output_img(self, extent_layer):
         rect = extent_layer.extent()

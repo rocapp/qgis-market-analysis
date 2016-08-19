@@ -136,7 +136,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Enter Road Distance Limit</string>
+      <string>Enter Road Distance Limit (km)</string>
      </property>
     </widget>
    </item>
