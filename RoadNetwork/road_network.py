@@ -20,14 +20,20 @@
  *                                                                         *
  ***************************************************************************/
 """
+
+from qgis.core import *
+from qgis.gui import *
+from qgis.networkanalysis import *
+import qgis.utils
+from qgis.analysis import QgsGeometryAnalyzer
+
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
-from PyQt4.QtGui import QAction, QIcon
+from PyQt4.QtGui import QAction, QIcon, QFileDialog
 # Initialize Qt resources from file resources.py
 import resources
 # Import the code for the dialog
 from road_network_dialog import RoadNetworkDialog
 import os.path
-
 
 class RoadNetwork:
     """QGIS Plugin Implementation."""
@@ -181,12 +187,116 @@ class RoadNetwork:
 
     def run(self):
         """Run method that performs all the real work"""
+        self.dlg.set_dist_limit()
+        self.dlg.layers_tool(self.iface.legendInterface().layers())
+        self.dlg.point_tool(self.iface.mapCanvas())
+        
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
-            pass
+            self.iface.mapCanvas().mapTool() # Reset map tool
+            start_point = self.dlg.tool.point
+            r = self.dlg.dist_lim_text
+            sel_ix = self.dlg.comboBox.currentIndex()
+            vl = self.dlg.layers[sel_ix]
+            vl3 = QgsVectorLayer("Point", "marked_points", "memory")
+            QgsMapLayerRegistry.instance().addMapLayer(vl3)
+            pr = vl3.dataProvider()
+            vl3.startEditing()
+            all_pts = self.distance(vl, start_point, pr, r)
+            vl3.updateExtents()
+            centroids_outname = self.get_files()[0]
+            QgsGeometryAnalyzer().centroids(vl3, centroids_outname, False) # save centroids
+            centroid_layer = QgsVectorLayer(centroids_outname, "centroid_layer", "ogr")
+            centroid_layer.updateExtents()
+            QgsMapLayerRegistry.instance().addMapLayer(centroid_layer)
+
+    def output_img(self, extent_layer):
+        rect = extent_layer.extent()
+        rect.grow(5e-2)
+        canvas = self.iface.mapCanvas()
+        canvas.setExtent(rect)
+        canvas.setLayerSet(list(map(lambda ll: QgsMapCanvasLayer(ll), QgsMapLayerRegistry.instance().mapLayers())))
+        canvas.refresh()
+        settings = canvas.mapSettings()
+        settings.setLayers(list(map(lambda li: li.id(), QgsMapLayerRegistry.instance().mapLayers())))
+        ndpi = 300.00
+        dpmm = ndpi / 25.4
+        nwidth = int(dpmm * settings.outputSize().width())
+        nheight = int(dpmm * settings.outputSize().height())
+        settings.setOutputDpi(ndpi)
+        settings.setOutputSize(QSize(nwidth, nheight))
+        job = QgsMapRendererParallelJob(settings)
+        job.start()
+        job.waitForFinished()
+        image = job.renderedImage()
+        image.save(self.get_files(type_="tif")[0])
+
+    def get_files(self, type_="shp"):
+        types = {"shp": "SHP files (*.shp)",
+                 "tif": "TIF files (*.tif)",
+                 "all": "All Files (*.*)"}
+        dlg = QFileDialog()
+        dlg.setFileMode(QFileDialog.AnyFile)
+        dlg.setFilter(types[type_])
+        filenames = QStringList()
+        if dlg.exec_():
+            filenames = dlg.selectedFiles()
+        return filenames
+            
+    def distance(self, vl, pStart, pr, r):
+        canvas = self.iface.mapCanvas()
+        mapRenderer = QgsMapRenderer()
+        director = QgsLineVectorLayerDirector(vl, -1, '', '', '', 3)
+        properter = QgsDistanceArcProperter()
+        director.addProperter(properter)
+
+        crs = mapRenderer.destinationCrs()
+        builder = QgsGraphBuilder(crs)
+
+        delta = canvas.getCoordinateTransform().mapUnitsPerPixel() * 1
+
+        all_pts = list()
+        feats = list()
+        all_pts.append((pStart.x(), pStart.y()))
+        startPt = QgsGeometry.fromPoint(pStart)
+        startF = QgsFeature()
+        startF.setGeometry(startPt)
+        feats.append(startF)
+
+        tiedPoints = director.makeGraph(builder, [pStart])
+        graph = builder.graph()
+        tStart = tiedPoints[0]
+
+        idStart = graph.findVertex(tStart)
+        (tree, cost) = QgsGraphAnalyzer.dijkstra(graph, idStart, 0)
+
+        upperBound = []
+        i = 0
+        while i < len(cost):
+            if cost[i] > r and tree[i] != -1:
+                outVertexId = graph.arc(tree [i]).outVertex()
+                if cost[outVertexId] < r:
+                    upperBound.append(i)
+            i = i + 1
+
+        for i in upperBound:
+            centerPoint = graph.vertex(i).point()
+            all_pts.append((centerPoint.x(), centerPoint.y()))
+            # print centerPoint.x(), centerPoint.y()
+            newPt = QgsGeometry.fromPoint(centerPoint)
+            feature = QgsFeature()
+            feature.setGeometry(newPt)
+            feats.append(feature)
+        pr.addFeatures(feats)
+        return all_pts
+
+
+
+            
+
+
+
