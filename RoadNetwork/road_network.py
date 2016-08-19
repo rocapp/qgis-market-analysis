@@ -251,7 +251,6 @@ class RoadNetwork:
         return filenames
             
     def distance(self, vl, pStart, vl3, r):
-        pStart = QgsPoint(pStart)
         canvas = self.iface.mapCanvas()
         mapRenderer = QgsMapRenderer()
         director = QgsLineVectorLayerDirector(vl, -1, '', '', '', 3)

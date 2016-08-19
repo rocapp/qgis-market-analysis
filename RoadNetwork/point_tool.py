@@ -26,6 +26,7 @@ class PointTool(QgsMapTool):
         y = event.pos().y()
 
         point = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
+
         self.point = point
         if self.label is not None: self.label.setText(repr(self.point))
 
