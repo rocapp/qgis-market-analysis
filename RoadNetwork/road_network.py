@@ -188,6 +188,9 @@ class RoadNetwork:
     def run(self):
         """Run method that performs all the real work"""
         self.dlg.set_dist_limit()
+        start_vl = QgsVectorLayer("Point", "Start Point", "memory") # Layer containing start point
+        QgsMapLayerRegistry.instance().addMapLayer(start_vl)
+        self.dlg.set_point_layer(start_vl) # Set start point layer
         self.dlg.layers_tool(self.iface.legendInterface().layers())
         self.dlg.point_tool(self.iface.mapCanvas())
         
@@ -204,10 +207,6 @@ class RoadNetwork:
             sel_ix = self.dlg.comboBox.currentIndex() # Get the selected layer index
             vl11 = self.iface.legendInterface().layers()[sel_ix] # Get the selected layer
 
-            start_vl = QgsVectorLayer("Point", "Start Point", "memory") # Layer containing boundary points
-            QgsMapLayerRegistry.instance().addMapLayer(start_vl)
-            self.setup_start_point(start_vl, start_point) # Add start point to layer, plot
-
             vl = QgsVectorLayer("LineString", "Road Network Information", "memory") # Layer containing road vectors
             QgsMapLayerRegistry.instance().addMapLayer(vl)
             self.setup_polylines(vl, vl11) # Extract road vectors
@@ -219,17 +218,6 @@ class RoadNetwork:
             self.iface.mapCanvas().refresh() # Refresh canvas
             self.dlg.coord_label.setText(str("(0.0000, 0.0000)"))
             self.dlg.comboBox.clear()
-
-    def setup_start_point(self, start_layer, start_point):
-        startPt = QgsGeometry.fromPoint(start_point) # Get geometry of start point
-        startF = QgsFeature() # Create a new feature for the start point
-        startF.setGeometry(startPt)
-        pr_start = start_vl.dataProvider() # Add start point feature to layer
-        start_vl.startEditing()
-        pr_start.addFeatures([startF])
-        start_vl.updateExtents()
-        start_vl.commitChanges()
-        self.iface.mapCanvas().refresh()
 
     def setup_polylines(self, vl, vl11):
         iterr = vl11.getFeatures()

@@ -52,7 +52,11 @@ class RoadNetworkDialog(QtGui.QDialog, FORM_CLASS):
         self.comboBox.addItems(layer_list)
         self.layers = layers
 
+    def set_point_layer(self, start_layer):
+        self.start_layer = start_layer
+
     def point_tool(self, canvas):
         self.tool = PointTool(canvas)
         self.tool.set_label(self.coord_label)
+        self.tool.set_start_layer(self.start_layer)
         canvas.setMapTool(self.tool)
