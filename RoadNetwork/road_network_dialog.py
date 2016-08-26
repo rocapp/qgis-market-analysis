@@ -43,6 +43,7 @@ class RoadNetworkDialog(QtGui.QDialog, FORM_CLASS):
 
     def set_dist_limit(self):
         self.dist_limit.textChanged.connect(self.text_changed)
+        self.dist_lim_text = self.dist_limit.displayText()
 
     def text_changed(self, text):
         self.dist_lim_text = text
@@ -59,4 +60,4 @@ class RoadNetworkDialog(QtGui.QDialog, FORM_CLASS):
         self.tool = PointTool(canvas)
         self.tool.set_label(self.coord_label)
         self.tool.set_start_layer(self.start_layer)
-        canvas.setMapTool(self.tool)
+        self.tool.activate()

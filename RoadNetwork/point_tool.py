@@ -1,4 +1,5 @@
 from qgis.gui import QgsMapTool
+from qgis.core import QgsGeometry, QgsFeature
 
 class PointTool(QgsMapTool):
     def __init__(self, canvas):
@@ -22,7 +23,7 @@ class PointTool(QgsMapTool):
         y = event.pos().y()
 
         point = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
-        # self.point = point
+        if self.label is not None and self.point is None: self.label.setText(repr(point))
 
     def canvasReleaseEvent(self, event):
         #Get the click
@@ -37,7 +38,7 @@ class PointTool(QgsMapTool):
 
     def setup_start_point(self):
         start_point = self.point
-        start_layer = self.start_layer
+        start_vl = self.start_layer
         startPt = QgsGeometry.fromPoint(start_point) # Get geometry of start point
         startF = QgsFeature() # Create a new feature for the start point
         startF.setGeometry(startPt)
@@ -45,14 +46,19 @@ class PointTool(QgsMapTool):
         start_vl.startEditing()
         pr_start.addFeatures([startF])
         start_vl.updateExtents()
-        start_vl.commitChanges()
         self.canvas.refresh()
 
     def activate(self):
-        pass
+        self.canvas.setMapTool(self)
 
     def deactivate(self):
-        pass
+        self.canvas.unsetMapTool(self)
+
+    def reset(self):
+        self.start_layer = None
+        self.label = None
+        self.point = None
+        self.canvas = None
 
     def isZoomTool(self):
         return False

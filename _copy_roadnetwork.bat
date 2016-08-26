@@ -1,1 +1,1 @@
-Xcopy RoadNetwork %QGIS_PLUGINS%/RoadNetwork /S /-Y
+Xcopy RoadNetwork %QGIS_PLUGINS%\RoadNetwork /S /-Y

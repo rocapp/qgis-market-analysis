@@ -27,8 +27,10 @@ from qgis.networkanalysis import *
 import qgis.utils
 from qgis.analysis import QgsGeometryAnalyzer
 
-from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
-from PyQt4.QtGui import QAction, QIcon, QFileDialog
+import time
+
+from PyQt4.QtCore import * # QSettings, QTranslator, qVersion, QCoreApplication
+from PyQt4.QtGui import QAction, QIcon, QFileDialog, QProgressBar
 # Initialize Qt resources from file resources.py
 import resources
 # Import the code for the dialog
@@ -186,38 +188,61 @@ class RoadNetwork:
 
 
     def run(self):
-        """Run method that performs all the real work"""
-        self.dlg.set_dist_limit()
+        layer_set = list()
+        layer_set.append(QgsMapCanvasLayer(self.iface.activeLayer()))
+
+        self.dlg.set_dist_limit() # Set up boundary limit text
         start_vl = QgsVectorLayer("Point", "Start Point", "memory") # Layer containing start point
+        start_ml = QgsMapCanvasLayer(start_vl)
+        layer_set.insert(0, start_ml)
+        self.iface.mapCanvas().setLayerSet(layer_set)
+
+        crs_string = "?crs=%s" % (start_vl.crs().toWkt(),) # Get CRS from start point layer
         QgsMapLayerRegistry.instance().addMapLayer(start_vl)
         self.dlg.set_point_layer(start_vl) # Set start point layer
         self.dlg.layers_tool(self.iface.legendInterface().layers())
         self.dlg.point_tool(self.iface.mapCanvas())
-        
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
+            pMessage = self.iface.messageBar().createMessage("Calculating distances...")
+            progress = QProgressBar()
+            progress.setMaximum(100)
+            progress.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
+            pMessage.layout().addWidget(progress)
+            self.iface.messageBar().pushWidget(pMessage, self.iface.messageBar().INFO)
+
             self.iface.mapCanvas().mapTool() # Reset map tool
             self.iface.actionPan().trigger() # Set to pan tool
+
             start_point = self.dlg.tool.point # Get selected start point
             r = float(self.dlg.dist_lim_text) * 1e3 # Get boundary distance (convert to meters)
             sel_ix = self.dlg.comboBox.currentIndex() # Get the selected layer index
             vl11 = self.iface.legendInterface().layers()[sel_ix] # Get the selected layer
-
-            vl = QgsVectorLayer("LineString", "Road Network Information", "memory") # Layer containing road vectors
-            QgsMapLayerRegistry.instance().addMapLayer(vl)
+            vl = QgsVectorLayer("LineString" + crs_string, "Road Network Information", "memory") # Layer containing road vectors
+            QgsMapLayerRegistry.instance().addMapLayer(vl, False) # Hide this layer
+            rni_ml = QgsMapCanvasLayer(vl)
+            rni_ml.setVisible(False)
+            layer_set.append(rni_ml)
+            self.iface.mapCanvas().refresh()
             self.setup_polylines(vl, vl11) # Extract road vectors
             
-            vl3 = QgsVectorLayer("Point", "Area of Availability Boundary", "memory") # Layer containing boundary points
+            vl3 = QgsVectorLayer("Point" + crs_string, "Area of Availability Boundary", "memory") # Layer containing boundary points
             QgsMapLayerRegistry.instance().addMapLayer(vl3)
-            self.distance(vl, start_point, vl3, r) # Compute boundary
+            vl3_ml = QgsMapCanvasLayer(vl3)
+            layer_set.insert(0, vl3_ml)
+            progress.setValue(15)
+            self.distance(vl, start_point, vl3, r, progress) # Compute boundary
+            self.iface.mapCanvas().setLayerSet(layer_set)
 
             self.iface.mapCanvas().refresh() # Refresh canvas
-            self.dlg.coord_label.setText(str("(0.0000, 0.0000)"))
+            progress.setValue(100)
             self.dlg.comboBox.clear()
+            self.iface.messageBar().clearWidgets()
+            self.iface.messageBar().pushSuccess("Finished!", "Completed boundary calculation. :^)")
 
     def setup_polylines(self, vl, vl11):
         iterr = vl11.getFeatures()
@@ -268,15 +293,11 @@ class RoadNetwork:
             filenames = list(map(lambda ff: ".".join([ff, type_]), dlg.selectedFiles()))
         return filenames
             
-    def distance(self, vl, pStart, vl3, r):
+    def distance(self, vl, pStart, vl3, r, progress):
         canvas = self.iface.mapCanvas()
         mapRenderer = QgsMapRenderer()
         # Set up objects for graph creation:
-        director = QgsLineVectorLayerDirector(vl=vl, directionFieldId=2, 
-                                              directDirectionValue='yes', 
-                                              reverseDirectionValue='',
-                                              bothDirectionValue='',
-                                              defaultDirection=3) # 1=direct, 2=reverse, 3=both
+        director = QgsLineVectorLayerDirector(vl, -1, '', '', '', 3) # 1=direct, 2=reverse, 3=both
         properter = QgsDistanceArcProperter() # Strategy for detecting edge properties
         director.addProperter(properter)
 
@@ -287,6 +308,7 @@ class RoadNetwork:
         builder = QgsGraphBuilder(crs)
 
         tiedPoints = director.makeGraph(builder, [pStart]) # Tie start point to graph
+        progress.setValue(progress.value() + 15)
         graph = builder.graph()
         tStart = tiedPoints[0]
 
@@ -294,6 +316,8 @@ class RoadNetwork:
         (tree, cost) = QgsGraphAnalyzer.dijkstra(graph, idStart, 0) # Perform Dijkstra's algorithm, 
                                                                     # returns [index of incoming edge,
                                                                     # distance from root to vertex]
+        progress.setValue(progress.value() + 20)
+
         # Get the boundary points
         upperBound = list()
         for i in range(len(cost)):
@@ -301,6 +325,7 @@ class RoadNetwork:
                 outVertexId = graph.arc(tree [i]).outVertex() # This is an outer vertex, so get the ID
                 if cost[outVertexId] < r: # And if the source vertex is accessible,
                     upperBound.append(i) # This is an upper boundary, so we keep it.
+            progress.setValue(progress.value() + 2)
         
         # Store the set of upper bound points as features
         feats = list()
@@ -312,8 +337,8 @@ class RoadNetwork:
             feats.append(feature)
         pr.addFeatures(feats)
         vl3.updateExtents()
-        vl.commitChanges()
-        vl3.commitChanges()
+        # vl.commitChanges()
+        # vl3.commitChanges()
 
 
 
