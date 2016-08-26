@@ -198,19 +198,38 @@ class RoadNetwork:
         # See if OK was pressed
         if result:
             self.iface.mapCanvas().mapTool() # Reset map tool
-            start_point = self.dlg.tool.point
-            r = float(self.dlg.dist_lim_text)
-            sel_ix = self.dlg.comboBox.currentIndex()
-            vl11 = self.iface.legendInterface().layers()[sel_ix]
-            vl = QgsVectorLayer("LineString", "polylines_layer", "memory")
+            self.iface.actionPan().trigger() # Set to pan tool
+            start_point = self.dlg.tool.point # Get selected start point
+            r = float(self.dlg.dist_lim_text) * 1e3 # Get boundary distance (convert to meters)
+            sel_ix = self.dlg.comboBox.currentIndex() # Get the selected layer index
+            vl11 = self.iface.legendInterface().layers()[sel_ix] # Get the selected layer
+
+            start_vl = QgsVectorLayer("Point", "Start Point", "memory") # Layer containing boundary points
+            QgsMapLayerRegistry.instance().addMapLayer(start_vl)
+            self.setup_start_point(start_vl, start_point) # Add start point to layer, plot
+
+            vl = QgsVectorLayer("LineString", "Road Network Information", "memory") # Layer containing road vectors
             QgsMapLayerRegistry.instance().addMapLayer(vl)
-            self.setup_polylines(vl, vl11)
-            vl3 = QgsVectorLayer("Point", "marked_points", "memory")
+            self.setup_polylines(vl, vl11) # Extract road vectors
+            
+            vl3 = QgsVectorLayer("Point", "Area of Availability Boundary", "memory") # Layer containing boundary points
             QgsMapLayerRegistry.instance().addMapLayer(vl3)
-            all_pts = self.distance(vl, start_point, vl3, r)
-            self.iface.mapCanvas().refresh()
+            self.distance(vl, start_point, vl3, r) # Compute boundary
+
+            self.iface.mapCanvas().refresh() # Refresh canvas
             self.dlg.coord_label.setText(str("(0.0000, 0.0000)"))
             self.dlg.comboBox.clear()
+
+    def setup_start_point(self, start_layer, start_point):
+        startPt = QgsGeometry.fromPoint(start_point) # Get geometry of start point
+        startF = QgsFeature() # Create a new feature for the start point
+        startF.setGeometry(startPt)
+        pr_start = start_vl.dataProvider() # Add start point feature to layer
+        start_vl.startEditing()
+        pr_start.addFeatures([startF])
+        start_vl.updateExtents()
+        start_vl.commitChanges()
+        self.iface.mapCanvas().refresh()
 
     def setup_polylines(self, vl, vl11):
         iterr = vl11.getFeatures()
@@ -264,53 +283,49 @@ class RoadNetwork:
     def distance(self, vl, pStart, vl3, r):
         canvas = self.iface.mapCanvas()
         mapRenderer = QgsMapRenderer()
-        director = QgsLineVectorLayerDirector(vl, -1, '', '', '', 3)
-        properter = QgsDistanceArcProperter()
+        # Set up objects for graph creation:
+        director = QgsLineVectorLayerDirector(vl=vl, directionFieldId=2, 
+                                              directDirectionValue='yes', 
+                                              reverseDirectionValue='',
+                                              bothDirectionValue='',
+                                              defaultDirection=3) # 1=direct, 2=reverse, 3=both
+        properter = QgsDistanceArcProperter() # Strategy for detecting edge properties
         director.addProperter(properter)
 
-        pr = vl3.dataProvider()
+        pr = vl3.dataProvider() # Data provider to get the boundary points
         vl3.startEditing()
 
-        crs = mapRenderer.destinationCrs()
+        crs = mapRenderer.destinationCrs() # Gets the CRS
         builder = QgsGraphBuilder(crs)
 
-        delta = canvas.getCoordinateTransform().mapUnitsPerPixel() * 1
-
-        all_pts = list()
-        feats = list()
-        all_pts.append((pStart.x(), pStart.y()))
-        startPt = QgsGeometry.fromPoint(pStart)
-        startF = QgsFeature()
-        startF.setGeometry(startPt)
-        feats.append(startF)
-
-        tiedPoints = director.makeGraph(builder, [pStart])
+        tiedPoints = director.makeGraph(builder, [pStart]) # Tie start point to graph
         graph = builder.graph()
         tStart = tiedPoints[0]
 
-        idStart = graph.findVertex(tStart)
-        (tree, cost) = QgsGraphAnalyzer.dijkstra(graph, idStart, 0)
-
-        upperBound = []
-        i = 0
-        while i < len(cost):
-            if cost[i] > r and tree[i] != -1:
-                outVertexId = graph.arc(tree [i]).outVertex()
-                if cost[outVertexId] < r:
-                    upperBound.append(i)
-            i = i + 1
-        print len(upperBound)
-        for i in upperBound:
-            centerPoint = graph.vertex(i).point()
-            all_pts.append((centerPoint.x(), centerPoint.y()))
-            # print centerPoint.x(), centerPoint.y()
+        idStart = graph.findVertex(tStart) # Vertex ID of start point
+        (tree, cost) = QgsGraphAnalyzer.dijkstra(graph, idStart, 0) # Perform Dijkstra's algorithm, 
+                                                                    # returns [index of incoming edge,
+                                                                    # distance from root to vertex]
+        # Get the boundary points
+        upperBound = list()
+        for i in range(len(cost)):
+            if cost[i] > r and tree[i] != -1: # If (cost[i] > r) and the incoming vertex is not accessible,
+                outVertexId = graph.arc(tree [i]).outVertex() # This is an outer vertex, so get the ID
+                if cost[outVertexId] < r: # And if the source vertex is accessible,
+                    upperBound.append(i) # This is an upper boundary, so we keep it.
+        
+        # Store the set of upper bound points as features
+        feats = list()
+        for ix in upperBound:
+            centerPoint = graph.vertex(ix).point()
             newPt = QgsGeometry.fromPoint(centerPoint)
             feature = QgsFeature()
             feature.setGeometry(newPt)
             feats.append(feature)
         pr.addFeatures(feats)
         vl3.updateExtents()
-        return all_pts
+        vl.commitChanges()
+        vl3.commitChanges()
 
 
 
