@@ -1,41 +1,47 @@
 <html>
 <body>
-<h3>Plugin Builder Results</h3>
 
-Congratulations! You just built a plugin for QGIS!<br/><br />
+<h2>Rocky Branches Plugin Suite</h2>
 
-<div id='help' style='font-size:.9em;'>
-Your plugin <b>RoadNetwork</b> was created in:<br>
-&nbsp;&nbsp;<b>C:\OSGeo4W\bin\market_analysis\RoadNetwork</b>
-<p>
-Your QGIS plugin directory is located at:<br>
-&nbsp;&nbsp;<b>C:/Users/Robbie/.qgis2/python/plugins</b>
-<p>
-<h3>What's Next</h3>
-<ol>
-    <li>In your plugin directory, compile the resources file using pyrcc4 (simply run <b>make</b> if you have automake or use <b>pb_tool</b>)
-    <li>Test the generated sources using <b>make test</b> (or run tests from your IDE)
-    <li>Copy the entire directory containing your new plugin to the QGIS plugin directory (see Notes below)
-    <li>Test the plugin by enabling it in the QGIS plugin manager
-    <li>Customize it by editing the implementation file <b>road_network.py</b>
-    <li>Create your own custom icon, replacing the default <b>icon.png</b>
-    <li>Modify your user interface by opening <b>road_network_dialog_base.ui</b> in Qt Designer
-</ol>
-Notes:
-<ul>
-    <li>You can use the <b>Makefile</b> to compile and deploy when you
-        make changes. This requires GNU make (gmake). The Makefile is ready to use, however you 
-        will have to edit it to add addional Python source files, dialogs, and translations.
-    <li>You can also use <b>pb_tool</b> to compile and deploy your plugin. Tweak the <i>pb_tool.cfg</i> file included with your plugin as you add files. Install <b>pb_tool</b> using 
-        <i>pip</i> or <i>easy_install</i>. See <a href="http://loc8.cc/pb_tool">http://loc8.cc/pb_tool</a> for more information.
-</ul>
-</div>
-<div style='font-size:.9em;'>
-<p>
-For information on writing PyQGIS code, see <a href="http://loc8.cc/pyqgis_resources">http://loc8.cc/pyqgis_resources</a> for a list of resources.
+<p style="margin-left: 20px">
+    <b>RoadNetwork,</b>
+    A plugin to help find the area of availability of a road network.<br />
+    You'll need to set:<br />
+    <span style="margin-left: 35px">
+        A roads layer, a start point, and a road distance to travel.
+    </span>
+    
 </p>
-</div>
-<img src="http://geoapt.com/geoapt_logo_p.png" alt='GeoApt LLC' title='GeoApt LLC' align='absmiddle'>
-&copy;2011-2015 GeoApt LLC - geoapt.com 
+
+<h3>Installation:</h3>
+<p>
+    <ol type="1">
+        <li>Go to Releases, and download the latest ZIP.</li>
+        <li>Extract to C:\Users\YOURUSERNAME\.qgis2\python\plugins\PLUGINNAME</li>
+    </ol>
+    <ul style="list-style-type:none">
+      <li>NOTE: Make sure you extract the folder such that the directory hierarchy is like this:
+        <li>C:\Users\YOURUSERNAME\.qgis2\python\plugins\PLUGINNAME</li>
+      </li>
+      <li>NOT LIKE THIS:
+        <li>C:\Users\YOURUSERNAME\.qgis2\python\plugins\PLUGINNAME\PLUGINNAME</li>
+      </li>
+    </ul>
+</p>
+
+<h3>Examples:</h3>
+<p>
+    <ul style="list-style-type:none">
+        <li>See the Examples directory for example qgis projects</li>
+    </ul>
+</p>
+
+<h3>Source Code:</h3>
+<p>
+    <ul style="list-style-type:none">
+        <li>All source code is under the respective plugin directory, e.g. RoadNetwork/</li>
+    </ul>
+</p>
+
 </body>
 </html>

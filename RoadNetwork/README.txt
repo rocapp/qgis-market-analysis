@@ -1,33 +1,24 @@
-Plugin Builder Results
+# rocky-branches-qgis
+A suite of QGIS plugins for market analysis
 
-Your plugin RoadNetwork was created in:
-    C:\OSGeo4W\bin\market_analysis\RoadNetwork
+# RoadNetwork
+A plugin for plotting the area of availability, given a roads layer, a start point, and a road distance to travel.
 
-Your QGIS plugin directory is located at:
-    C:/Users/Robbie/.qgis2/python/plugins
 
-What's Next:
+**Installation:**
+- Go to Releases, and download the latest ZIP. 
+- Extract to C:\Users\YOURUSERNAME\.qgis2\python\plugins\PLUGINNAME
 
-  * Copy the entire directory containing your new plugin to the QGIS plugin
-    directory
+  NOTE: Make sure you extract the folder such that the directory hierarchy is like this:
+  
+    C:\Users\YOURUSERNAME\.qgis2\python\plugins\PLUGINNAME
+  
+  NOT LIKE THIS:
+  
+    C:\Users\YOURUSERNAME\.qgis2\python\plugins\PLUGINNAME\PLUGINNAME
 
-  * Compile the resources file using pyrcc4
+**Examples:**
+- See the Examples directory for example qgis projects
 
-  * Run the tests (``make test``)
-
-  * Test the plugin by enabling it in the QGIS plugin manager
-
-  * Customize it by editing the implementation file: ``road_network.py``
-
-  * Create your own custom icon, replacing the default icon.png
-
-  * Modify your user interface by opening RoadNetwork.ui in Qt Designer
-
-  * You can use the Makefile to compile your Ui and resource files when
-    you make changes. This requires GNU make (gmake)
-
-For more information, see the PyQGIS Developer Cookbook at:
-http://www.qgis.org/pyqgis-cookbook/index.html
-
-(C) 2011-2014 GeoApt LLC - geoapt.com
-Git revision : $Format:%H$
+**Source Code:**
+- All source code is under the respective plugin directory, e.g. RoadNetwork/
