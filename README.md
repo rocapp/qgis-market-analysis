@@ -2,7 +2,7 @@
 A suite of QGIS plugins for market analysis
 
 
-Installation:
+**Installation:**
 - Go to Releases, and download the latest ZIP. 
 - Extract to C:\Users\YOURUSERNAME\.qgis2\python\plugins\PLUGINNAME
 
@@ -14,6 +14,8 @@ Installation:
 	
 		C:\Users\YOURUSERNAME\.qgis2\python\plugins\PLUGINNAME\PLUGINNAME
 
-~~~
-All source code is under the respective plugin directory, e.g. RoadNetwork/
-~~~
+**Examples:**
+- See the Examples directory for example qgis projects
+
+**Source Code:**
+- All source code is under the respective plugin directory, e.g. RoadNetwork/
