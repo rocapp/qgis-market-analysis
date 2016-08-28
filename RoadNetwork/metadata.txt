@@ -7,9 +7,9 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=Rocky Branches - Market Analysis
+name=Rocky Branches - RoadNetwork
 qgisMinimumVersion=2.0
-description=Easy-to-use road network and demographics analysis
+description=Easy-to-use area of availability calculation for road distance
 version=0.1
 author=Robert Capps
 email=rocapp@gmail.com
