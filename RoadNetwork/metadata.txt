@@ -16,7 +16,7 @@ email=rocapp@gmail.com
 
 about=An easy-to-use tool for rendering road network analysis data, including: - Dijkstra paths (from source node) - Demographics-based cost-benefit analysis
 
-tracker=http://robcapps.com
+tracker=https://github.com/rocapp/rocky-branches-qgis/issues
 repository=https://github.com/rocapp/qgis-market-analysis
 # End of mandatory metadata
 
