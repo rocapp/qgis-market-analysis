@@ -189,7 +189,7 @@ class RoadNetwork:
 
     def run(self):
         layer_set = list()
-        layer_set.append(QgsMapCanvasLayer(self.iface.activeLayer()))
+        layer_set.append(QgsMapCanvasLayer(self.iface.activeLayer())) # Add any current layers
 
         self.dlg.set_dist_limit() # Set up boundary limit text
         start_vl = QgsVectorLayer("Point", "Start Point", "memory") # Layer containing start point
@@ -198,18 +198,21 @@ class RoadNetwork:
         self.iface.mapCanvas().setLayerSet(layer_set)
 
         crs_string = "?crs=%s" % (start_vl.crs().toWkt(),) # Get CRS from start point layer
-        QgsMapLayerRegistry.instance().addMapLayer(start_vl)
+        QgsMapLayerRegistry.instance().addMapLayer(start_vl, True)
         self.dlg.set_point_layer(start_vl) # Set start point layer
-        self.dlg.layers_tool(self.iface.legendInterface().layers())
+        glayers = [ll for ll in self.iface.legendInterface().layers() if "Start Point" != ll.name()]
+        self.dlg.layers_tool(glayers)
         self.dlg.point_tool(self.iface.mapCanvas())
+
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
+
             pMessage = self.iface.messageBar().createMessage("Calculating distances...")
-            progress = QProgressBar()
+            progress = QProgressBar() # Loading bar (progress)
             progress.setMaximum(100)
             progress.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
             pMessage.layout().addWidget(progress)
@@ -220,8 +223,9 @@ class RoadNetwork:
 
             start_point = self.dlg.tool.point # Get selected start point
             r = float(self.dlg.dist_lim_text) * 1e3 # Get boundary distance (convert to meters)
-            sel_ix = self.dlg.comboBox.currentIndex() # Get the selected layer index
-            vl11 = self.iface.legendInterface().layers()[sel_ix] # Get the selected layer
+            sel_txt = self.dlg.comboBox.itemText(self.dlg.comboBox.currentIndex()) # Get the selected layer txt
+            vl11 = QgsMapLayerRegistry.instance().mapLayersByName(sel_txt)[0] # Get selected layer
+            
             vl = QgsVectorLayer("LineString" + crs_string, "Road Network Information", "memory") # Layer containing road vectors
             QgsMapLayerRegistry.instance().addMapLayer(vl, False) # Hide this layer
             rni_ml = QgsMapCanvasLayer(vl)

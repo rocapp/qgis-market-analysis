@@ -1,13 +1,20 @@
 from qgis.gui import QgsMapTool
-from qgis.core import QgsGeometry, QgsFeature
+from qgis.core import QgsGeometry, QgsFeature, QgsVectorLayer
+from qgis import utils
+
+from PyQt4 import QtCore, QtGui
 
 class PointTool(QgsMapTool):
     def __init__(self, canvas):
         QgsMapTool.__init__(self, canvas)
         self.canvas = canvas
+        self.window = None
         self.point = None
         self.label = None
         self.start_layer = None
+
+    def set_win(self, win):
+        self.window = win
 
     def set_label(self, label):
         self.label = label
@@ -49,6 +56,9 @@ class PointTool(QgsMapTool):
         self.canvas.refresh()
 
     def activate(self):
+        # cursor = QtGui.QCursor() # Set cursor
+        # cursor.setShape(QtCore.Qt.CrossCursor)
+        # self.window.centralWidget().setCursor(cursor)
         self.canvas.setMapTool(self)
 
     def deactivate(self):

@@ -58,6 +58,7 @@ class RoadNetworkDialog(QtGui.QDialog, FORM_CLASS):
 
     def point_tool(self, canvas):
         self.tool = PointTool(canvas)
+        # self.tool.set_win(mainWin)
         self.tool.set_label(self.coord_label)
         self.tool.set_start_layer(self.start_layer)
         self.tool.activate()
