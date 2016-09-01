@@ -8,9 +8,9 @@
 
 [general]
 name=Rocky Branches - RoadNetwork
-qgisMinimumVersion=2.0
+qgisMinimumVersion=2.16
 description=Easy-to-use area of availability calculation for road distance
-version=0.1
+version=0.1.1
 author=Robert Capps
 email=rocapp@gmail.com
 
