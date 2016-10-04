@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>308</width>
-    <height>219</height>
+    <width>368</width>
+    <height>357</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,13 +16,13 @@
   <property name="styleSheet">
    <string notr="true">background-color: rgb(106, 106, 106);</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
     <widget class="QLabel" name="label_2">
      <property name="font">
       <font>
        <family>Inconsolata</family>
-       <pointsize>14</pointsize>
+       <pointsize>18</pointsize>
        <weight>75</weight>
        <bold>true</bold>
       </font>
@@ -35,12 +35,12 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0" colspan="2">
+   <item>
     <widget class="QComboBox" name="comboBox">
      <property name="font">
       <font>
        <family>Inconsolata</family>
-       <pointsize>14</pointsize>
+       <pointsize>18</pointsize>
       </font>
      </property>
      <property name="styleSheet">
@@ -49,12 +49,12 @@ color: rgb(255, 255, 255);</string>
      </property>
     </widget>
    </item>
-   <item row="2" column="0" colspan="2">
+   <item>
     <widget class="QLabel" name="label">
      <property name="font">
       <font>
        <family>Inconsolata</family>
-       <pointsize>14</pointsize>
+       <pointsize>20</pointsize>
        <weight>75</weight>
        <bold>true</bold>
       </font>
@@ -63,11 +63,117 @@ color: rgb(255, 255, 255);</string>
       <string notr="true">color: rgb(255, 255, 255);</string>
      </property>
      <property name="text">
-      <string>Start Point (select from map)</string>
+      <string>Start Point (UTM)</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="0" colspan="2">
+   <item>
+    <widget class="QRadioButton" name="radio_map">
+     <property name="palette">
+      <palette>
+       <active>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>255</red>
+           <green>255</green>
+           <blue>255</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </active>
+       <inactive>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>255</red>
+           <green>255</green>
+           <blue>255</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </inactive>
+       <disabled>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>120</red>
+           <green>120</green>
+           <blue>120</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </disabled>
+      </palette>
+     </property>
+     <property name="font">
+      <font>
+       <family>Inconsolata</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>Choose from map</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QRadioButton" name="radio_text">
+     <property name="palette">
+      <palette>
+       <active>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>255</red>
+           <green>255</green>
+           <blue>255</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </active>
+       <inactive>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>255</red>
+           <green>255</green>
+           <blue>255</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </inactive>
+       <disabled>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>120</red>
+           <green>120</green>
+           <blue>120</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </disabled>
+      </palette>
+     </property>
+     <property name="font">
+      <font>
+       <family>Inconsolata</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Edit in textbox</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="coord_label">
      <property name="font">
       <font>
@@ -99,7 +205,25 @@ color: rgb(255, 255, 255);</string>
      </property>
     </widget>
    </item>
-   <item row="5" column="0">
+   <item>
+    <widget class="QLabel" name="label_3">
+     <property name="font">
+      <font>
+       <family>Inconsolata</family>
+       <pointsize>20</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: rgb(255, 255, 255);</string>
+     </property>
+     <property name="text">
+      <string>Distance along roads (km)</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLineEdit" name="dist_limit">
      <property name="palette">
       <palette>
@@ -343,25 +467,7 @@ alternate-background-color: rgb(163, 0, 0);</string>
      </property>
     </widget>
    </item>
-   <item row="5" column="1">
-    <widget class="QLabel" name="label_4">
-     <property name="font">
-      <font>
-       <family>Inconsolata</family>
-       <pointsize>14</pointsize>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">color: rgb(255, 255, 255);</string>
-     </property>
-     <property name="text">
-      <string>km</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0" colspan="2">
+   <item>
     <widget class="QDialogButtonBox" name="button_box">
      <property name="font">
       <font>
@@ -379,28 +485,10 @@ alternate-background-color: rgb(163, 0, 0);</string>
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::Close|QDialogButtonBox::Ok</set>
      </property>
      <property name="centerButtons">
       <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="0" colspan="2">
-    <widget class="QLabel" name="label_3">
-     <property name="font">
-      <font>
-       <family>Inconsolata</family>
-       <pointsize>14</pointsize>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">color: rgb(255, 255, 255);</string>
-     </property>
-     <property name="text">
-      <string>Distance along roads (km)</string>
      </property>
     </widget>
    </item>

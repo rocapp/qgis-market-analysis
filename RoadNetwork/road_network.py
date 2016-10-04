@@ -171,7 +171,7 @@ class RoadNetwork:
         icon_path = ':/plugins/RoadNetwork/icon.png'
         self.add_action(
             icon_path,
-            text=self.tr(u'RB - Market Analysis'),
+            text=self.tr(u'RB - Road Network'),
             callback=self.run,
             parent=self.iface.mainWindow())
 
@@ -192,25 +192,30 @@ class RoadNetwork:
         layer_set.append(QgsMapCanvasLayer(self.iface.activeLayer())) # Add any current layers
 
         self.dlg.set_dist_limit() # Set up boundary limit text
+        
+        # Set up start point vector layer
         start_vl = QgsVectorLayer("Point", "Start Point", "memory") # Layer containing start point
         start_ml = QgsMapCanvasLayer(start_vl)
         layer_set.insert(0, start_ml)
         self.iface.mapCanvas().setLayerSet(layer_set)
 
+        # Get CRS, add start layer, set up dialog
         crs_string = "?crs=%s" % (start_vl.crs().toWkt(),) # Get CRS from start point layer
         QgsMapLayerRegistry.instance().addMapLayer(start_vl, True)
         self.dlg.set_point_layer(start_vl) # Set start point layer
         glayers = [ll for ll in self.iface.legendInterface().layers() if "Start Point" != ll.name()]
         self.dlg.layers_tool(glayers)
         self.dlg.point_tool(self.iface.mapCanvas())
+        self.dlg.set_iface(self.iface)
 
         # show the dialog
         self.dlg.show()
+
         # Run the dialog event loop
         result = self.dlg.exec_()
+
         # See if OK was pressed
         if result:
-
             pMessage = self.iface.messageBar().createMessage("Calculating distances...")
             progress = QProgressBar() # Loading bar (progress)
             progress.setMaximum(100)
@@ -247,6 +252,8 @@ class RoadNetwork:
             self.dlg.comboBox.clear()
             self.iface.messageBar().clearWidgets()
             self.iface.messageBar().pushSuccess("Finished!", "Completed boundary calculation. :^)")
+        self.iface.mapCanvas().mapTool() # Reset map tool
+        self.iface.actionPan().trigger() # Set to pan tool
 
     def setup_polylines(self, vl, vl11):
         iterr = vl11.getFeatures()
@@ -265,7 +272,7 @@ class RoadNetwork:
         vl.updateExtents()
 
     def output_img(self, extent_layer):
-        rect = extent_layer.extent()
+        rect = extent_layer.extent() # Extent layer should be vl3 (area of availability)
         rect.grow(5e-2)
         canvas = self.iface.mapCanvas()
         canvas.setExtent(rect)
