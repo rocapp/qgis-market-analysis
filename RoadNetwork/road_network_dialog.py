@@ -23,7 +23,7 @@
 
 import os
 
-from qgis.core import QgsVectorFileWriter, QgsMapLayerRegistry
+from qgis.core import QgsVectorFileWriter, QgsMapLayerRegistry, QgsGeometry, QgsFeature, QgsPoint
 
 from PyQt4 import QtGui, uic, QtCore
 from point_tool import PointTool
@@ -43,7 +43,13 @@ class RoadNetworkDialog(QtGui.QDialog, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
         self.setup_radios()
+        self.setup_line_edit()
         self.setup_close()
+        self.start_point = QgsPoint(0.000, 0.000)
+
+    def setup_line_edit(self):
+        self.coord_label.returnPressed.connect(lambda:self.setup_start_point(self.coord_label.text()))
+        self.coord_label.editingFinished.connect(self.coord_label.returnPressed)
 
     def setup_close(self):
         close_button = [b for b in self.button_box.buttons() if b.text() == "Close"][0]
@@ -77,11 +83,28 @@ class RoadNetworkDialog(QtGui.QDialog, FORM_CLASS):
         behave[r.text()]()
 
     def activate_tool(self):
+        self.coord_label.setReadOnly(True)
         self.point_tool(self.canvas)
 
     def deactivate_tool(self):
+        self.coord_label.setReadOnly(False)
         self.canvas.mapTool() # Reset map tool
         self.iface.actionPan().trigger() # Set to pan tool
+
+    def setup_start_point(self, str_point):
+        x, y = eval(str_point)
+        start_point = QgsPoint(x, y)
+        self.point = start_point
+        start_vl = self.start_layer
+        startPt = QgsGeometry.fromPoint(start_point) # Get geometry of start point
+        startF = QgsFeature() # Create a new feature for the start point
+        startF.setGeometry(startPt)
+        pr_start = start_vl.dataProvider() # Add start point feature to layer
+        start_vl.startEditing()
+        pr_start.addFeatures([startF])
+        start_vl.updateExtents()
+        self.canvas.refresh()
+        self.coord_label.setModified(False)
 
     def point_tool(self, canvas):
         self.canvas = canvas

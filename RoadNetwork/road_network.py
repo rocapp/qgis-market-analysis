@@ -226,7 +226,10 @@ class RoadNetwork:
             self.iface.mapCanvas().mapTool() # Reset map tool
             self.iface.actionPan().trigger() # Set to pan tool
 
-            start_point = self.dlg.tool.point # Get selected start point
+            if self.dlg.tool.point is not None:
+                start_point = self.dlg.tool.point # Get selected start point
+            else:
+                start_point = self.dlg.point
             r = float(self.dlg.dist_lim_text) * 1e3 # Get boundary distance (convert to meters)
             sel_txt = self.dlg.comboBox.itemText(self.dlg.comboBox.currentIndex()) # Get the selected layer txt
             vl11 = QgsMapLayerRegistry.instance().mapLayersByName(sel_txt)[0] # Get selected layer
