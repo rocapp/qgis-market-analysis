@@ -194,7 +194,8 @@ class RoadNetwork:
         self.dlg.set_dist_limit() # Set up boundary limit text
         
         # Set up start point vector layer
-        start_vl = QgsVectorLayer("Point", "Start Point", "memory") # Layer containing start point
+        # start_vl = QgsVectorLayer("Point", "Start Point", "memory") # Layer containing start point
+        start_vl = QgsVectorLayer(self.dlg.save_dg("Save start point layer as..."), "Start Point", "ogr")
         start_ml = QgsMapCanvasLayer(start_vl)
         layer_set.insert(0, start_ml)
         self.iface.mapCanvas().setLayerSet(layer_set)
@@ -242,7 +243,9 @@ class RoadNetwork:
             self.iface.mapCanvas().refresh()
             self.setup_polylines(vl, vl11) # Extract road vectors
             
-            vl3 = QgsVectorLayer("Point" + crs_string, "Area of Availability Boundary", "memory") # Layer containing boundary points
+            # vl3 = QgsVectorLayer("Point" + crs_string, "Area of Availability Boundary", "memory") # Layer containing boundary points
+            vl3 = QgsVectorLayer(self.dlg.save_dg("Save area of availability layer as..."), "Area of Availability Boundary", "ogr")
+            self.dlg.set_vl3_layer(vl3)
             QgsMapLayerRegistry.instance().addMapLayer(vl3)
             vl3_ml = QgsMapCanvasLayer(vl3)
             layer_set.insert(0, vl3_ml)
@@ -255,6 +258,7 @@ class RoadNetwork:
             self.dlg.comboBox.clear()
             self.iface.messageBar().clearWidgets()
             self.iface.messageBar().pushSuccess("Finished!", "Completed boundary calculation. :^)")
+            # self.dlg.ask_save(start_vl, vl3) # Save?
         self.iface.mapCanvas().mapTool() # Reset map tool
         self.iface.actionPan().trigger() # Set to pan tool
 

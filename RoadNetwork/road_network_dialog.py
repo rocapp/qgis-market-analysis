@@ -77,6 +77,9 @@ class RoadNetworkDialog(QtGui.QDialog, FORM_CLASS):
     def set_point_layer(self, start_layer):
         self.start_layer = start_layer
 
+    def set_vl3_layer(self, vl3):
+        self.vl3 = vl3
+
     def radio_check(self, r):
         behave = {"Choose from map": self.activate_tool,
                   "Edit in textbox": self.deactivate_tool}
@@ -114,9 +117,35 @@ class RoadNetworkDialog(QtGui.QDialog, FORM_CLASS):
         self.tool.set_start_layer(self.start_layer)
         self.tool.activate()
 
+    def save_dg(self, caption, type_="shp"):
+        types = {"shp": "SHP files (*.shp)",
+                 "tif": "TIF files (*.tif)",
+                 "all": "All Files (*.*)"}
+        filename = QtGui.QFileDialog.getSaveFileName(self, caption, "", types[type_])
+        return filename
+
+    # def ask_save(self, start_layer, vl3):
+    #     # self.start_layer.commitChanges()
+    #     # self.vl3.commitChanges()
+    #     start_filename = self.save_dg("Save start point layer as...", type_="shp")
+    #     sprov = start_layer.dataProvider()
+    #     sfields = sprov.fields()
+    #     swriter = QgsVectorFileWriter(start_filename, "CP1250", sfields, sprov.geometryType(), sprov.crs(), "ESRI Shapefile")
+    #     sfeat = QgsFeature()
+    #     sfeat.setGeometry(start_layer.geometry())
+    #     swriter.addFeature(sfeat)
+    #     del swriter
+    #     area_filename = self.save_dg("Save area of availability layer as...", type_="shp")
+    #     aprov = vl3.dataProvider()
+    #     afields = aprov.fields()
+    #     awriter = QgsVectorFileWriter(area_filename, "CP1250", afields, aprov.geometryType(), aprov.crs(), "ESRI Shapefile")
+    #     afeat = QgsFeature()
+    #     afeat.setGeometry(vl3.geometry())
+    #     awriter.addFeature(afeat)
+    #     del awriter
+
     def closeEvent(self, event):
         self.deactivate_tool()
         feat_ids = self.start_layer.allFeatureIds()
         if len(feat_ids) < 1:
             QgsMapLayerRegistry.instance().removeMapLayers([self.start_layer.id()])
-
